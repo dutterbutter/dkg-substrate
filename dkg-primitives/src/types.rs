@@ -87,6 +87,7 @@ pub struct DKGSignedPayload<Key> {
 pub enum DKGPayloadKey {
 	EVMProposal(ProposalNonce), // TODO: new voting types here
 	RefreshVote(u64),
+	AnchorUpdateProposal(ProposalNonce),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

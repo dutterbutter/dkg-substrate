@@ -14,7 +14,7 @@ mod tests;
 use dkg_runtime_primitives::{
 	EIP1559TransactionMessage, EIP2930TransactionMessage, LegacyTransactionMessage,
 	OffchainSignedProposals, ProposalAction, ProposalHandlerTrait, ProposalNonce, ProposalType,
-	TransactionV2, OFFCHAIN_SIGNED_PROPOSALS,
+	TransactionV2, OFFCHAIN_SIGNED_PROPOSALS, U256,
 };
 use frame_support::pallet_prelude::*;
 use frame_system::{
@@ -158,7 +158,10 @@ impl<T: Config> ProposalHandlerTrait for Pallet<T> {
 			let (chain_id, nonce) = Self::extract_chain_id_and_nonce(&eth_transaction)?;
 			let unsigned_proposal = ProposalType::EVMUnsigned { data: proposal };
 			UnsignedProposalQueue::<T>::insert(chain_id, nonce, unsigned_proposal);
-		};
+		} else if let Ok((chain_id, nonce)) = Self::decode_anchor_update(&proposal) {
+			let unsigned_proposal = ProposalType::AnchorUpdate { data: proposal };
+			UnsignedProposalQueue::<T>::insert(chain_id, nonce, unsigned_proposal);
+		}
 
 		return Ok(())
 	}
@@ -293,5 +296,43 @@ impl<T: Config> Pallet<T> {
 		};
 
 		return Ok((chain_id, nonce))
+	}
+
+	fn decode_anchor_update(data: &[u8]) -> Result<(T::ChainId, ProposalNonce), Error<T>> {
+		frame_support::log::debug!(
+			target: "dkg_proposal_handler",
+			"🕸️ Decoding anchor update: {:?} ({} bytes)",
+			data,
+			data.len(),
+		);
+		// check if the data length is 118 bytes [
+		// 	anchor_handler_address_0x_prefixed(22),
+		// 	chain_id(32),
+		// 	nonce(32),
+		// 	merkle_root(32)
+		// ]
+		if data.len() != 22 + 32 + 32 + 32 {
+			return Err(Error::<T>::ProposalFormatInvalid)?
+		}
+		// skip the first 22 bytes and then read the next 32 bytes as the chain id as U256
+		let chain_id = U256::from(&data[22..(22 + 32)]).as_u64();
+		let chain_id = match T::ChainId::try_from(chain_id) {
+			Ok(v) => v,
+			Err(_) => return Err(Error::<T>::ChainIdInvalid)?,
+		};
+		frame_support::log::debug!(
+			target: "dkg_proposal_handler",
+			"🕸️ Got Chain id: {:?}",
+			chain_id,
+		);
+		// read the next 32 bytes as the nonce
+		let nonce = U256::from(&data[(22 + 32)..64]).as_u64();
+		frame_support::log::debug!(
+			target: "dkg_proposal_handler",
+			"🕸️ Got Nonce: {}",
+			nonce,
+		);
+		// now return the result
+		Ok((chain_id, nonce))
 	}
 }

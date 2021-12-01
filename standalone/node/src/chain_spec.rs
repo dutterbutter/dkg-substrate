@@ -1,8 +1,8 @@
 use dkg_standalone_runtime::{
 	constants::currency::{Balance, DOLLARS},
-	AccountId, AuraConfig, BalancesConfig, DKGConfig, DKGId, GenesisConfig, GrandpaConfig, Perbill,
-	SessionConfig, Signature, StakerStatus, StakingConfig, SudoConfig, SystemConfig,
-	MAX_NOMINATIONS, WASM_BINARY,
+	AccountId, AuraConfig, BalancesConfig, DKGConfig, DKGId, DKGProposalsConfig, GenesisConfig,
+	GrandpaConfig, Perbill, SessionConfig, Signature, StakerStatus, StakingConfig, SudoConfig,
+	SystemConfig, MAX_NOMINATIONS, WASM_BINARY,
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -223,5 +223,16 @@ fn testnet_genesis(
 			key: root_key,
 		},
 		dkg: DKGConfig::default(),
+		dkg_proposals: DKGProposalsConfig {
+			initial_chain_ids: vec![3, 4],
+			initial_r_ids: vec![(
+				[
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x81, 0x28, 0x79, 0xbc,
+					0x2c, 0xc7, 0x02, 0x95, 0x66, 0x71, 0x03, 0x64, 0x63, 0xe6, 0x87, 0x3f, 0x63,
+					0x17, 0x86, 0x00, 0x00, 0x00, 0x03,
+				],
+				Default::default(),
+			)],
+		},
 	}
 }

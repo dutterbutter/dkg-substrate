@@ -602,7 +602,7 @@ construct_runtime!(
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Historical: pallet_session_historical::{Pallet},
 		DKG: pallet_dkg_metadata::{Pallet, Storage, Call, Config<T>},
-		DKGProposals: pallet_dkg_proposals::{Pallet, Call, Storage, Event<T>},
+		DKGProposals: pallet_dkg_proposals::{Pallet, Call, Storage, Event<T>, Config<T>},
 		MMR: pallet_mmr::{Pallet, Storage},
 		DKGProposalHandler: pallet_dkg_proposal_handler::{Pallet, Call, Storage, Event<T>},
 		DKGMMR: pallet_dkg_mmr::{Pallet, Storage}

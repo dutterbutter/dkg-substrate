@@ -46,7 +46,8 @@ use dkg_primitives::ProposalType;
 use dkg_runtime_primitives::{
 	crypto::{AuthorityId, Public},
 	ConsensusLog, MmrRootHash, OffchainSignedProposals, GENESIS_AUTHORITY_SET_ID,
-	OFFCHAIN_PUBLIC_KEY, OFFCHAIN_PUBLIC_KEY_SIG, OFFCHAIN_SIGNED_PROPOSALS,
+	OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS, OFFCHAIN_PUBLIC_KEY, OFFCHAIN_PUBLIC_KEY_SIG,
+	OFFCHAIN_SIGNED_PROPOSALS,
 };
 
 use crate::{
@@ -255,7 +256,7 @@ where
 		let missing: Vec<_> = store.difference(&active).cloned().collect();
 
 		if !missing.is_empty() {
-			debug!(target: "dkg", "🕸️  for block {:?} public key missing in validator set: {:?}", block, missing);
+			trace!(target: "dkg", "🕸️  for block {:?} public key missing in validator set: {:?}", block, missing);
 		}
 
 		Ok(())
@@ -284,7 +285,7 @@ where
 			let n = authority_set.authorities.len();
 
 			let rounds = MultiPartyECDSARounds::new(
-				u16::try_from(party_inx).unwrap(),
+				u16::try_from(party_inx + 1).unwrap(),
 				thresh,
 				u16::try_from(n).unwrap(),
 				authority_set.id.clone(),
@@ -336,7 +337,7 @@ where
 			if active.id != self.current_validator_set.id ||
 				(active.id == GENESIS_AUTHORITY_SET_ID && self.best_dkg_block.is_none())
 			{
-				debug!(target: "dkg", "🕸️  New active validator set id: {:?}", active);
+				trace!(target: "dkg", "🕸️  New active validator set id: {:?}", active);
 				metric_set!(self, dkg_validator_set_id, active.id);
 
 				// DKG should produce a signed commitment for each session
@@ -353,7 +354,7 @@ where
 				// Reset refresh status
 				self.refresh_in_progress = false;
 
-				debug!(target: "dkg", "🕸️  New Rounds for id: {:?}", active.id);
+				trace!(target: "dkg", "🕸️  New Rounds for id: {:?}", active.id);
 
 				self.best_dkg_block = Some(*header.number());
 
@@ -397,7 +398,7 @@ where
 	// *** DKG rounds ***
 
 	fn send_outgoing_dkg_messages(&mut self) {
-		debug!(target: "dkg", "🕸️  Try sending DKG messages");
+		trace!(target: "dkg", "🕸️  Try sending DKG messages");
 
 		let send_messages = |rounds: &mut MultiPartyECDSARounds<DKGPayloadKey>,
 		                     authority_id: Public| {
@@ -421,7 +422,7 @@ where
 					round_id: rounds.get_id(),
 				};
 				let encoded_dkg_message = dkg_message.encode();
-				debug!(
+				trace!(
 					target: "dkg",
 					"🕸️  DKG Message: {:?}, encoded: {:?}",
 					dkg_message,
@@ -440,7 +441,7 @@ where
 		if let Some(id) =
 			self.key_store.authority_id(self.current_validator_set.authorities.as_slice())
 		{
-			debug!(target: "dkg", "🕸️  Local authority id: {:?}", id);
+			trace!(target: "dkg", "🕸️  Local authority id: {:?}", id);
 			send_messages(&mut self.rounds, id);
 		} else {
 			panic!("error");
@@ -451,7 +452,7 @@ where
 			if let Some(id) =
 				self.key_store.authority_id(self.queued_validator_set.authorities.as_slice())
 			{
-				debug!(target: "dkg", "🕸️  Local authority id: {:?}", id);
+				trace!(target: "dkg", "🕸️  Local authority id: {:?}", id);
 				if let Some(next_rounds) = self.next_rounds.as_mut() {
 					send_messages(next_rounds, id);
 				}
@@ -535,7 +536,11 @@ where
 						&finished_round.signature,
 					);
 				}
-			}, // TODO: handle other key types
+			},
+			DKGPayloadKey::AnchorUpdateProposal(_nonce) => {
+				self.process_signed_anchor_update_proposal(finished_round);
+			},
+			// TODO: handle other key types
 		};
 	}
 
@@ -571,9 +576,11 @@ where
 		};
 
 		for (nonce, proposal) in unsigned_proposals {
-			let key = DKGPayloadKey::EVMProposal(nonce);
-			let data = match proposal {
-				ProposalType::EVMUnsigned { ref data } => data.clone(),
+			debug!(target: "dkg", "🕸️  Got Proposal {:?} with {} as nonce", proposal, nonce);
+			let (key, data) = match proposal {
+				ProposalType::EVMUnsigned { data } => (DKGPayloadKey::EVMProposal(nonce), data),
+				ProposalType::AnchorUpdate { data } =>
+					(DKGPayloadKey::AnchorUpdateProposal(nonce), data),
 				_ => continue,
 			};
 
@@ -586,7 +593,7 @@ where
 	}
 
 	fn process_signed_proposal(&mut self, signed_payload: DKGSignedPayload<DKGPayloadKey>) {
-		trace!(target: "dkg", "🕸️  saving signed proposal in offchain starage");
+		debug!(target: "dkg", "🕸️  saving signed proposal in offchain starage");
 
 		let signed_proposal = ProposalType::EVMSigned {
 			data: signed_payload.payload,
@@ -610,7 +617,42 @@ where
 					old_val.as_deref(),
 					&prop_wrapper.encode(),
 				) {
-					trace!(target: "dkg", "🕸️  Successfully saved signed proposal in offchain starage");
+					debug!(target: "dkg", "🕸️  Successfully saved signed proposal in offchain starage");
+					break
+				}
+			}
+		}
+	}
+
+	fn process_signed_anchor_update_proposal(
+		&mut self,
+		signed_payload: DKGSignedPayload<DKGPayloadKey>,
+	) {
+		debug!(target: "dkg", "🕸️  saving signed anchor update proposal in offchain starage");
+
+		let signed_proposal = ProposalType::AnchorUpdateSigned {
+			data: signed_payload.payload,
+			signature: signed_payload.signature,
+		};
+
+		if let Some(mut offchain) = self.backend.offchain_storage() {
+			let old_val = offchain.get(STORAGE_PREFIX, OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS);
+
+			let mut prop_wrapper = match old_val.clone() {
+				Some(ser_props) => OffchainSignedProposals::decode(&mut &ser_props[..]).unwrap(),
+				None => OffchainSignedProposals::default(),
+			};
+
+			prop_wrapper.proposals.push_back(signed_proposal);
+
+			for _i in 1..STORAGE_SET_RETRY_NUM {
+				if offchain.compare_and_set(
+					STORAGE_PREFIX,
+					OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS,
+					old_val.as_deref(),
+					&prop_wrapper.encode(),
+				) {
+					debug!(target: "dkg", "🕸️  Successfully saved signed anchor update proposal in offchain starage");
 					break
 				}
 			}
