@@ -21,12 +21,12 @@ use sc_network_gossip::{ValidationResult, Validator, ValidatorContext};
 use sp_runtime::traits::{Block, Hash, Header, NumberFor};
 
 use codec::Decode;
-use log::{debug, error, trace};
+use log::{debug, error, trace, warn};
 use parking_lot::{Mutex, RwLock};
 use wasm_timer::Instant;
 
 use crate::types::dkg_topic;
-use dkg_primitives::types::DKGMessage;
+use dkg_primitives::types::{DKGMessage, DKGPayloadKey};
 use dkg_runtime_primitives::{crypto::Public, MmrRootHash};
 
 // Limit DKG gossip by keeping only a bound number of voting rounds alive.
@@ -130,14 +130,26 @@ where
 		data: &[u8],
 	) -> ValidationResult<B::Hash> {
 		let mut data_copy = data;
-		trace!(target: "dkg", "🕸️  Got a message: {:?}, from: {:?}", data_copy, sender);
+		debug!(target: "dkg", "🕸️  Got a message: {:?}, from: {:?}", data_copy, sender);
+		debug!(target: "dkg", "🕸️  decoding message as DKGMessage::<Public, (MmrRootHash, NumberFor<B>)>");
 		match DKGMessage::<Public, (MmrRootHash, NumberFor<B>)>::decode(&mut data_copy) {
 			Ok(msg) => {
-				trace!(target: "dkg", "🕸️  Got dkg message: {:?}, from: {:?}", msg, sender);
+				debug!(target: "dkg", "🕸️  Got dkg message: {:?}, from: {:?}", msg, sender);
 				return ValidationResult::ProcessAndKeep(dkg_topic::<B>())
 			},
 			Err(e) => {
-				error!(target: "dkg", "🕸️  Got invalid dkg message: {:?}, from: {:?}", e, sender);
+				warn!(target: "dkg", "🕸️  Got invalid dkg message: {:?}, from: {:?}", e, sender);
+			},
+		}
+
+		debug!(target: "dkg", "🕸️  decoding message as DKGMessage::<Public, DKGPayloadKey>");
+		match DKGMessage::<Public, DKGPayloadKey>::decode(&mut data_copy) {
+			Ok(msg) => {
+				debug!(target: "dkg", "🕸️  Got dkg message: {:?}, from: {:?}", msg, sender);
+				return ValidationResult::ProcessAndKeep(dkg_topic::<B>())
+			},
+			Err(e) => {
+				warn!(target: "dkg", "🕸️  Got invalid dkg message: {:?}, from: {:?}", e, sender);
 			},
 		}
 
