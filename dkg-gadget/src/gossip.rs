@@ -130,22 +130,11 @@ where
 		data: &[u8],
 	) -> ValidationResult<B::Hash> {
 		let mut data_copy = data;
-		debug!(target: "dkg", "🕸️  Got a message: {:?}, from: {:?}", data_copy, sender);
-		debug!(target: "dkg", "🕸️  decoding message as DKGMessage::<Public, (MmrRootHash, NumberFor<B>)>");
-		match DKGMessage::<Public, (MmrRootHash, NumberFor<B>)>::decode(&mut data_copy) {
-			Ok(msg) => {
-				debug!(target: "dkg", "🕸️  Got dkg message: {:?}, from: {:?}", msg, sender);
-				return ValidationResult::ProcessAndKeep(dkg_topic::<B>())
-			},
-			Err(e) => {
-				warn!(target: "dkg", "🕸️  Got invalid dkg message: {:?}, from: {:?}", e, sender);
-			},
-		}
 
 		debug!(target: "dkg", "🕸️  decoding message as DKGMessage::<Public, DKGPayloadKey>");
 		match DKGMessage::<Public, DKGPayloadKey>::decode(&mut data_copy) {
 			Ok(msg) => {
-				debug!(target: "dkg", "🕸️  Got dkg message: {:?}, from: {:?}", msg, sender);
+				debug!(target: "dkg", "🕸️  Got dkg message with round_id: {}, from: {:?}", msg.round_id, sender);
 				return ValidationResult::ProcessAndKeep(dkg_topic::<B>())
 			},
 			Err(e) => {

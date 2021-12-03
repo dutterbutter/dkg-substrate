@@ -37,6 +37,8 @@ pub struct MultiPartyECDSARounds<SignPayloadKey> {
 	signer_set_id: SignerSetId,
 	stage: Stage,
 
+	signers_num: usize,
+
 	// Message processing
 	pending_keygen_msgs: Vec<DKGKeygenMessage>,
 	pending_offline_msgs: Vec<DKGOfflineMessage>,
@@ -72,6 +74,7 @@ where
 			keygen_set_id: 0,
 			signer_set_id: 0,
 			stage: Stage::KeygenReady,
+			signers_num: 0,
 			pending_keygen_msgs: Vec::new(),
 			pending_offline_msgs: Vec::new(),
 			keygen: None,
@@ -191,6 +194,8 @@ where
 		info!(target: "dkg", "🕸️  Resetting singers {:?}", s_l);
 		info!(target: "dkg", "🕸️  Signer set id {:?}", signer_set_id);
 
+		let s_l_len = s_l.len();
+
 		match self.stage {
 			Stage::KeygenReady | Stage::Keygen =>
 				Err("Cannot reset signers and start offline stage, Keygen is not complete"
@@ -201,6 +206,7 @@ where
 						Ok(new_offline_stage) => {
 							self.stage = Stage::Offline;
 							self.signer_set_id = signer_set_id;
+							self.signers_num = s_l_len;
 							self.offline_stage = Some(new_offline_stage);
 							self.completed_offline_stage = None;
 
@@ -398,7 +404,7 @@ where
 		let mut finished: Vec<K> = Vec::new();
 
 		for (round_key, round) in self.rounds.iter() {
-			if round.is_done(self.threshold.into()) {
+			if round.is_done(self.signers_num) {
 				finished.push(round_key.clone());
 			}
 		}
@@ -640,8 +646,8 @@ impl<P> DKGRoundTracker<P> {
 		true
 	}
 
-	fn is_done(&self, threshold: usize) -> bool {
-		self.sign_manual.is_some() && self.votes.len() >= threshold
+	fn is_done(&self, signers_num: usize) -> bool {
+		self.sign_manual.is_some() && self.votes.len() == signers_num - 1
 	}
 
 	fn complete(&mut self) -> Option<SignatureRecid> {
@@ -856,6 +862,11 @@ mod tests {
 
 		// Extract all signatures and check for correctness
 		check_all_signatures_correct(&mut parties);
+	}
+
+	#[test]
+	fn simulate_multi_party_t1_n3() {
+		simulate_multi_party(1, 3, (1..=3).collect());
 	}
 
 	#[test]
