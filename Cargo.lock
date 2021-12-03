@@ -1991,6 +1991,7 @@ dependencies = [
  "parity-scale-codec",
  "parking_lot 0.11.2",
  "round-based",
+ "scale-info",
  "serde",
  "sha3",
  "sp-core",

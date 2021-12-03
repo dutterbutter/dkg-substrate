@@ -12,7 +12,7 @@ mod mock;
 mod tests;
 
 use dkg_runtime_primitives::{
-	EIP1559TransactionMessage, EIP2930TransactionMessage, LegacyTransactionMessage,
+	DKGPayloadKey, EIP1559TransactionMessage, EIP2930TransactionMessage, LegacyTransactionMessage,
 	OffchainSignedProposals, ProposalAction, ProposalHandlerTrait, ProposalNonce, ProposalType,
 	TransactionV2, OFFCHAIN_SIGNED_PROPOSALS, U256,
 };
@@ -59,7 +59,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::ChainId,
 		Blake2_128Concat,
-		ProposalNonce,
+		DKGPayloadKey,
 		ProposalType,
 	>;
 
@@ -71,7 +71,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::ChainId,
 		Blake2_128Concat,
-		ProposalNonce,
+		DKGPayloadKey,
 		ProposalType,
 	>;
 
@@ -104,7 +104,12 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn offchain_worker(block_number: T::BlockNumber) {
-			let _res = Self::submit_signed_proposal_onchain(block_number);
+			let res = Self::submit_signed_proposal_onchain(block_number);
+			frame_support::log::debug!(
+				target: "dkg_proposal_handler",
+				"offchain worker result: {:?}",
+				res
+			);
 		}
 	}
 
@@ -117,6 +122,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let (data, signature) = match prop {
 				ProposalType::EVMSigned { ref data, ref signature } => (data, signature),
+				ProposalType::AnchorUpdateSigned { ref data, ref signature } => (data, signature),
 				_ => return Err(Error::<T>::ProposalSignatureInvalid)?,
 			};
 
@@ -129,7 +135,10 @@ pub mod pallet {
 				let (chain_id, nonce) = Self::extract_chain_id_and_nonce(&eth_transaction)?;
 
 				ensure!(
-					UnsignedProposalQueue::<T>::contains_key(chain_id, nonce),
+					UnsignedProposalQueue::<T>::contains_key(
+						chain_id,
+						DKGPayloadKey::EVMProposal(nonce)
+					),
 					Error::<T>::ProposalDoesNotExist
 				);
 				ensure!(
@@ -137,9 +146,36 @@ pub mod pallet {
 					Error::<T>::ProposalSignatureInvalid
 				);
 
-				SignedProposals::<T>::insert(chain_id, nonce, prop.clone());
+				SignedProposals::<T>::insert(
+					chain_id,
+					DKGPayloadKey::EVMProposal(nonce),
+					prop.clone(),
+				);
 
-				UnsignedProposalQueue::<T>::remove(chain_id, nonce);
+				UnsignedProposalQueue::<T>::remove(chain_id, DKGPayloadKey::EVMProposal(nonce));
+			} else if let Ok((chain_id, nonce)) = Self::decode_anchor_update(&data) {
+				ensure!(
+					UnsignedProposalQueue::<T>::contains_key(
+						chain_id,
+						DKGPayloadKey::AnchorUpdateProposal(nonce)
+					),
+					Error::<T>::ProposalDoesNotExist
+				);
+				ensure!(
+					Self::validate_proposal_signature(&data, &signature),
+					Error::<T>::ProposalSignatureInvalid
+				);
+
+				SignedProposals::<T>::insert(
+					chain_id,
+					DKGPayloadKey::AnchorUpdateProposal(nonce),
+					prop.clone(),
+				);
+
+				UnsignedProposalQueue::<T>::remove(
+					chain_id,
+					DKGPayloadKey::AnchorUpdateProposal(nonce),
+				);
 			}
 
 			Ok(().into())
@@ -157,10 +193,18 @@ impl<T: Config> ProposalHandlerTrait for Pallet<T> {
 
 			let (chain_id, nonce) = Self::extract_chain_id_and_nonce(&eth_transaction)?;
 			let unsigned_proposal = ProposalType::EVMUnsigned { data: proposal };
-			UnsignedProposalQueue::<T>::insert(chain_id, nonce, unsigned_proposal);
+			UnsignedProposalQueue::<T>::insert(
+				chain_id,
+				DKGPayloadKey::EVMProposal(nonce),
+				unsigned_proposal,
+			);
 		} else if let Ok((chain_id, nonce)) = Self::decode_anchor_update(&proposal) {
 			let unsigned_proposal = ProposalType::AnchorUpdate { data: proposal };
-			UnsignedProposalQueue::<T>::insert(chain_id, nonce, unsigned_proposal);
+			UnsignedProposalQueue::<T>::insert(
+				chain_id,
+				DKGPayloadKey::AnchorUpdateProposal(nonce),
+				unsigned_proposal,
+			);
 		}
 
 		return Ok(())
@@ -170,7 +214,7 @@ impl<T: Config> ProposalHandlerTrait for Pallet<T> {
 impl<T: Config> Pallet<T> {
 	// *** API methods ***
 
-	pub fn get_unsigned_proposals() -> Vec<(ProposalNonce, ProposalType)> {
+	pub fn get_unsigned_proposals() -> Vec<(DKGPayloadKey, ProposalType)> {
 		return UnsignedProposalQueue::<T>::iter()
 			.map(|entry| (entry.1, entry.2.clone()))
 			.collect()
@@ -203,6 +247,9 @@ impl<T: Config> Pallet<T> {
 				Ok(res) => res,
 				Err(_) => return Err("Could not decode stored proposals")?,
 			};
+
+			#[cfg(std)]
+			dbg!(&prop_wrapper.proposals);
 
 			if let Some(next_proposal) = prop_wrapper.proposals.pop_front() {
 				let _update_res = proposals_ref.mutate(|val| match val {

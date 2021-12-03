@@ -82,14 +82,6 @@ pub struct DKGSignedPayload<Key> {
 	pub signature: Vec<u8>,
 }
 
-#[derive(Debug, Clone, Decode, Encode, Copy, PartialEq, Eq, PartialOrd, Ord)]
-#[cfg_attr(feature = "scale-info", derive(scale_info::TypeInfo))]
-pub enum DKGPayloadKey {
-	EVMProposal(ProposalNonce), // TODO: new voting types here
-	RefreshVote(u64),
-	AnchorUpdateProposal(ProposalNonce),
-}
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stage {
 	KeygenReady,

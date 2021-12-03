@@ -16,18 +16,19 @@
 
 use std::{collections::BTreeMap, time::Duration};
 
+use dkg_primitives::DKGPayloadKey;
 use sc_network::PeerId;
 use sc_network_gossip::{ValidationResult, Validator, ValidatorContext};
-use sp_runtime::traits::{Block, Hash, Header, NumberFor};
+use sp_runtime::traits::{Block, Header, NumberFor};
 
 use codec::Decode;
-use log::{debug, error, trace, warn};
+use log::{debug, warn};
 use parking_lot::{Mutex, RwLock};
 use wasm_timer::Instant;
 
 use crate::types::dkg_topic;
-use dkg_primitives::types::{DKGMessage, DKGPayloadKey};
-use dkg_runtime_primitives::{crypto::Public, MmrRootHash};
+use dkg_primitives::types::DKGMessage;
+use dkg_runtime_primitives::crypto::Public;
 
 // Limit DKG gossip by keeping only a bound number of voting rounds alive.
 const MAX_LIVE_GOSSIP_ROUNDS: usize = 3;

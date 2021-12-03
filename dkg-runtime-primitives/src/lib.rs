@@ -45,9 +45,6 @@ pub const OFFCHAIN_PUBLIC_KEY: &[u8] = b"dkg-metadata::public_key";
 pub const OFFCHAIN_PUBLIC_KEY_SIG: &[u8] = b"dkg-metadata::public_key_sig";
 // Key for offchain signed proposals storage
 pub const OFFCHAIN_SIGNED_PROPOSALS: &[u8] = b"dkg-proposal-handler::signed_proposals";
-// Key for offchain storage of signed anchor update proposal
-pub const OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS: &[u8] =
-	b"dkg-proposal-handler::signed_anchor_update_proposals";
 
 #[derive(Clone, Debug, PartialEq, Eq, codec::Encode, codec::Decode)]
 pub struct OffchainSignedProposals {
@@ -151,6 +148,6 @@ sp_api::decl_runtime_apis! {
 		/// Fetch DKG public key for queued authorities
 		fn next_dkg_pub_key() -> Option<Vec<u8>>;
 		/// Get list of unsigned proposals
-		fn get_unsigned_proposals() -> Vec<(ProposalNonce, ProposalType)>;
+		fn get_unsigned_proposals() -> Vec<(DKGPayloadKey, ProposalType)>;
 	}
 }

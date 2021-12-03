@@ -31,10 +31,7 @@ use sc_client_api::{
 };
 use sc_network_gossip::GossipEngine;
 
-use sp_api::{
-	offchain::{OffchainStorage, STORAGE_PREFIX},
-	BlockId,
-};
+use sp_api::{offchain::OffchainStorage, BlockId};
 use sp_runtime::{
 	generic::OpaqueDigestItemId,
 	traits::{Block, Header, NumberFor},
@@ -46,8 +43,7 @@ use dkg_primitives::ProposalType;
 use dkg_runtime_primitives::{
 	crypto::{AuthorityId, Public},
 	ConsensusLog, MmrRootHash, OffchainSignedProposals, GENESIS_AUTHORITY_SET_ID,
-	OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS, OFFCHAIN_PUBLIC_KEY, OFFCHAIN_PUBLIC_KEY_SIG,
-	OFFCHAIN_SIGNED_PROPOSALS,
+	OFFCHAIN_PUBLIC_KEY, OFFCHAIN_PUBLIC_KEY_SIG, OFFCHAIN_SIGNED_PROPOSALS,
 };
 
 use crate::{
@@ -61,11 +57,13 @@ use crate::{
 
 use dkg_primitives::{
 	rounds::{DKGState, MultiPartyECDSARounds},
-	types::{DKGMessage, DKGPayloadKey, DKGSignedPayload},
+	types::{DKGMessage, DKGSignedPayload},
+	DKGPayloadKey,
 };
 use dkg_runtime_primitives::{AuthoritySet, DKGApi};
 
 pub const ENGINE_ID: sp_runtime::ConsensusEngineId = *b"WDKG";
+pub const STORAGE_PREFIX: &[u8] = b"";
 
 pub const STORAGE_SET_RETRY_NUM: usize = 5;
 
@@ -576,11 +574,10 @@ where
 		};
 
 		for (nonce, proposal) in unsigned_proposals {
-			debug!(target: "dkg", "🕸️  Got Proposal {:?} with {} as nonce", proposal, nonce);
+			debug!(target: "dkg", "🕸️  Got Proposal {:?} with {:?} as nonce", proposal, nonce);
 			let (key, data) = match proposal {
-				ProposalType::EVMUnsigned { data } => (DKGPayloadKey::EVMProposal(nonce), data),
-				ProposalType::AnchorUpdate { data } =>
-					(DKGPayloadKey::AnchorUpdateProposal(nonce), data),
+				ProposalType::EVMUnsigned { data } => (nonce, data),
+				ProposalType::AnchorUpdate { data } => (nonce, data),
 				_ => continue,
 			};
 
@@ -636,7 +633,7 @@ where
 		};
 
 		if let Some(mut offchain) = self.backend.offchain_storage() {
-			let old_val = offchain.get(STORAGE_PREFIX, OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS);
+			let old_val = offchain.get(STORAGE_PREFIX, OFFCHAIN_SIGNED_PROPOSALS);
 
 			let mut prop_wrapper = match old_val.clone() {
 				Some(ser_props) => OffchainSignedProposals::decode(&mut &ser_props[..]).unwrap(),
@@ -648,7 +645,7 @@ where
 			for _i in 1..STORAGE_SET_RETRY_NUM {
 				if offchain.compare_and_set(
 					STORAGE_PREFIX,
-					OFFCHAIN_ANCHOR_UPDATE_SIGNED_PROPOSALS,
+					OFFCHAIN_SIGNED_PROPOSALS,
 					old_val.as_deref(),
 					&prop_wrapper.encode(),
 				) {

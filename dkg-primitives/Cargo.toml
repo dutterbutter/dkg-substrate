@@ -15,6 +15,7 @@ sha3 = "0.9"
 hex = "0.4"
 
 codec = { version = "2.0.0", package = "parity-scale-codec", features = ["derive"] }
+scale-info = { version = "1.0", default-features = false, features = ["derive"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 bincode = "1.2.1"
 
@@ -23,3 +24,6 @@ round-based = { version = "0.1.4", features = [] }
 multi-party-ecdsa = { git = "https://github.com/ZenGo-X/multi-party-ecdsa.git" }
 sp-core = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
 dkg-runtime-primitives = { path = "../dkg-runtime-primitives" }
+
+[features]
+default = ["scale-info"]

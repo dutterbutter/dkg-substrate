@@ -17,6 +17,15 @@ pub enum ProposalType {
 	AnchorUpdateSigned { data: Vec<u8>, signature: Vec<u8> },
 }
 
+#[derive(
+	Debug, Clone, Decode, Encode, Copy, PartialEq, Eq, PartialOrd, Ord, scale_info::TypeInfo,
+)]
+pub enum DKGPayloadKey {
+	EVMProposal(ProposalNonce), // TODO: new voting types here
+	RefreshVote(u64),
+	AnchorUpdateProposal(ProposalNonce),
+}
+
 pub trait ProposalHandlerTrait {
 	fn handle_proposal(
 		proposal: Vec<u8>,
