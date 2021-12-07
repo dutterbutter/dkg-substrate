@@ -2083,6 +2083,7 @@ name = "dkg-standalone-node"
 version = "3.0.0"
 dependencies = [
  "dkg-gadget",
+ "dkg-runtime-primitives",
  "dkg-standalone-runtime",
  "frame-benchmarking",
  "frame-benchmarking-cli",
@@ -2110,6 +2111,7 @@ dependencies = [
  "sp-consensus-aura",
  "sp-core",
  "sp-finality-grandpa",
+ "sp-keystore",
  "sp-runtime",
  "sp-timestamp",
  "structopt",

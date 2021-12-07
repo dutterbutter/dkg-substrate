@@ -18,6 +18,7 @@
 
 use core::convert::TryFrom;
 use curv::elliptic::curves::traits::ECPoint;
+use sp_api::offchain::STORAGE_PREFIX;
 use std::{collections::BTreeSet, marker::PhantomData, sync::Arc};
 
 use codec::{Codec, Decode, Encode};
@@ -63,7 +64,6 @@ use dkg_primitives::{
 use dkg_runtime_primitives::{AuthoritySet, DKGApi};
 
 pub const ENGINE_ID: sp_runtime::ConsensusEngineId = *b"WDKG";
-pub const STORAGE_PREFIX: &[u8] = b"";
 
 pub const STORAGE_SET_RETRY_NUM: usize = 5;
 
@@ -522,7 +522,10 @@ where
 	fn handle_finished_round(&mut self, finished_round: DKGSignedPayload<DKGPayloadKey>) {
 		match finished_round.key {
 			DKGPayloadKey::EVMProposal(_nonce) => {
-				self.process_signed_proposal(finished_round);
+				self.process_signed_proposal(ProposalType::EVMSigned {
+					data: finished_round.payload,
+					signature: finished_round.signature,
+				});
 			},
 			DKGPayloadKey::RefreshVote(_nonce) => {
 				let offchain = self.backend.offchain_storage();
@@ -536,7 +539,10 @@ where
 				}
 			},
 			DKGPayloadKey::AnchorUpdateProposal(_nonce) => {
-				self.process_signed_anchor_update_proposal(finished_round);
+				self.process_signed_proposal(ProposalType::AnchorUpdateSigned {
+					data: finished_round.payload,
+					signature: finished_round.signature,
+				});
 			},
 			// TODO: handle other key types
 		};
@@ -589,13 +595,8 @@ where
 		}
 	}
 
-	fn process_signed_proposal(&mut self, signed_payload: DKGSignedPayload<DKGPayloadKey>) {
+	fn process_signed_proposal(&mut self, signed_proposal: ProposalType) {
 		debug!(target: "dkg", "🕸️  saving signed proposal in offchain starage");
-
-		let signed_proposal = ProposalType::EVMSigned {
-			data: signed_payload.payload,
-			signature: signed_payload.signature,
-		};
 
 		if let Some(mut offchain) = self.backend.offchain_storage() {
 			let old_val = offchain.get(STORAGE_PREFIX, OFFCHAIN_SIGNED_PROPOSALS);
@@ -618,41 +619,8 @@ where
 					break
 				}
 			}
-		}
-	}
-
-	fn process_signed_anchor_update_proposal(
-		&mut self,
-		signed_payload: DKGSignedPayload<DKGPayloadKey>,
-	) {
-		debug!(target: "dkg", "🕸️  saving signed anchor update proposal in offchain starage");
-
-		let signed_proposal = ProposalType::AnchorUpdateSigned {
-			data: signed_payload.payload,
-			signature: signed_payload.signature,
-		};
-
-		if let Some(mut offchain) = self.backend.offchain_storage() {
-			let old_val = offchain.get(STORAGE_PREFIX, OFFCHAIN_SIGNED_PROPOSALS);
-
-			let mut prop_wrapper = match old_val.clone() {
-				Some(ser_props) => OffchainSignedProposals::decode(&mut &ser_props[..]).unwrap(),
-				None => OffchainSignedProposals::default(),
-			};
-
-			prop_wrapper.proposals.push_back(signed_proposal);
-
-			for _i in 1..STORAGE_SET_RETRY_NUM {
-				if offchain.compare_and_set(
-					STORAGE_PREFIX,
-					OFFCHAIN_SIGNED_PROPOSALS,
-					old_val.as_deref(),
-					&prop_wrapper.encode(),
-				) {
-					debug!(target: "dkg", "🕸️  Successfully saved signed anchor update proposal in offchain starage");
-					break
-				}
-			}
+		} else {
+			error!(target: "dkg", "🕸️  Error saving signed proposal in offchain starage - no offchain storage");
 		}
 	}
 

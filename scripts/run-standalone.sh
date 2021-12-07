@@ -8,5 +8,6 @@ echo "*** Start Webb DKG Node ***"
 ./target/release/dkg-standalone-node --tmp \
     -lerror \
     -ldkg=debug \
+    -lruntime::offchain=debug \
     -ldkg_proposal_handler=debug \
     --charlie

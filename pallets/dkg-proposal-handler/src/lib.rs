@@ -117,16 +117,34 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(0)]
 		pub fn submit_signed_proposal(
-			_origin: OriginFor<T>,
+			origin: OriginFor<T>,
 			prop: ProposalType,
 		) -> DispatchResultWithPostInfo {
+			// let sender = ensure_signed(origin)?;
+			// log the caller, and the prop
+			frame_support::log::debug!(
+				target: "dkg_proposal_handler",
+				"submit_signed_proposal: prop: {:?}",
+				prop
+			);
 			let (data, signature) = match prop {
 				ProposalType::EVMSigned { ref data, ref signature } => (data, signature),
 				ProposalType::AnchorUpdateSigned { ref data, ref signature } => (data, signature),
 				_ => return Err(Error::<T>::ProposalSignatureInvalid)?,
 			};
-
+			// now we need to log the data and signature
+			frame_support::log::debug!(
+				target: "dkg_proposal_handler",
+				"submit_signed_proposal: data: {:?}, signature: {:?}",
+				data,
+				signature
+			);
 			if let Ok(eth_transaction) = TransactionV2::decode(&mut &data[..]) {
+				// log that we are decoding the transaction as TransactionV2
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"submit_signed_proposal: decoding as TransactionV2"
+				);
 				ensure!(
 					Self::validate_ethereum_tx(&eth_transaction),
 					Error::<T>::ProposalFormatInvalid
@@ -154,6 +172,13 @@ pub mod pallet {
 
 				UnsignedProposalQueue::<T>::remove(chain_id, DKGPayloadKey::EVMProposal(nonce));
 			} else if let Ok((chain_id, nonce)) = Self::decode_anchor_update(&data) {
+				// log the chain id and nonce
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"submit_signed_proposal: chain_id: {:?}, nonce: {:?}",
+					chain_id,
+					nonce
+				);
 				ensure!(
 					UnsignedProposalQueue::<T>::contains_key(
 						chain_id,
@@ -161,9 +186,20 @@ pub mod pallet {
 					),
 					Error::<T>::ProposalDoesNotExist
 				);
+				// log that proposal exist in the unsigned queue
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"submit_signed_proposal: proposal exist in the unsigned queue"
+				);
 				ensure!(
 					Self::validate_proposal_signature(&data, &signature),
 					Error::<T>::ProposalSignatureInvalid
+				);
+
+				// log that the signature is valid
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"submit_signed_proposal: signature is valid"
 				);
 
 				SignedProposals::<T>::insert(
@@ -223,7 +259,7 @@ impl<T: Config> Pallet<T> {
 	// *** Offchain worker methods ***
 
 	fn submit_signed_proposal_onchain(_block_number: T::BlockNumber) -> Result<(), &'static str> {
-		let signer = Signer::<T, T::OffChainAuthorityId>::all_accounts();
+		let signer = Signer::<T, T::OffChainAuthorityId>::any_account();
 		if !signer.can_sign() {
 			return Err(
 				"No local accounts available. Consider adding one via `author_insertKey` RPC.",
@@ -232,9 +268,21 @@ impl<T: Config> Pallet<T> {
 
 		match Self::get_next_offchain_signed_proposal() {
 			Ok(next_proposal) => {
-				let _ = signer.send_signed_transaction(|_account| Call::submit_signed_proposal {
-					prop: next_proposal.clone(),
-				});
+				// send unsigned transaction to the chain
+				let result = signer
+					.send_signed_transaction(|_acct| Call::<T>::submit_signed_proposal {
+						prop: next_proposal.clone(),
+					})
+					.iter()
+					.map(|r| r.1)
+					.collect::<Result<Vec<_>, _>>()
+					.map_err(|_| "Failed to submit signed transaction from ocw");
+				// log the result of the transaction submission
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"Submitted transaction for signed proposal: {:?}",
+					result
+				);
 			},
 			Err(e) => {
 				// log the error
@@ -252,33 +300,41 @@ impl<T: Config> Pallet<T> {
 	fn get_next_offchain_signed_proposal() -> Result<ProposalType, &'static str> {
 		let proposals_ref = StorageValueRef::persistent(OFFCHAIN_SIGNED_PROPOSALS);
 
-		match proposals_ref.get::<Vec<u8>>() {
-			Ok(Some(ser_props)) => {
-				let mut prop_wrapper = match OffchainSignedProposals::decode(&mut &ser_props[..]) {
-					Ok(res) => res,
-					Err(_) => return Err("Could not decode stored proposals")?,
-				};
-
-				#[cfg(std)]
-				dbg!(&prop_wrapper.proposals);
-
-				if let Some(next_proposal) = prop_wrapper.proposals.pop_front() {
-					let _update_res = proposals_ref.mutate(|val| match val {
-						Ok(Some(_)) => Ok(prop_wrapper.encode()),
-						_ => Err(()),
-					});
-
-					return Ok(next_proposal)
+		match proposals_ref.get::<OffchainSignedProposals>() {
+			Ok(Some(mut prop_wrapper)) => {
+				// log the proposals
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"Offchain signed proposals: {:?}",
+					prop_wrapper.proposals
+				);
+				// log how many proposals are left
+				frame_support::log::debug!(
+					target: "dkg_proposal_handler",
+					"Offchain signed proposals left: {}",
+					prop_wrapper.proposals.len()
+				);
+				match prop_wrapper.proposals.pop_front() {
+					Some(next_proposal) => {
+						proposals_ref.set(&prop_wrapper);
+						return Ok(next_proposal)
+					},
+					None => {
+						// log that there are no more proposals
+						frame_support::log::debug!(
+							target: "dkg_proposal_handler",
+							"No more offchain signed proposals"
+						);
+						return Err("No more offchain signed proposals")
+					},
 				}
 			},
-			Ok(None) => {
-				return Err("No signed proposals key stored")?
-			},
+			Ok(None) => return Err("No signed proposals key stored")?,
 			Err(e) => {
 				// log the error
 				frame_support::log::warn!(
 					target: "dkg_proposal_handler",
-					"Failed to get next signed proposal: {:?}",
+					"Failed to read offchain signed proposals: {:?}",
 					e
 				);
 			},

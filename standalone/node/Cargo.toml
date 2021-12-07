@@ -26,6 +26,7 @@ sc-executor = { git = 'https://github.com/paritytech/substrate', branch = 'polka
 sc-service = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11', features = ["wasmtime"] }
 sc-telemetry = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
 sc-keystore = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
+sp-keystore = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
 sc-transaction-pool = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
 sc-transaction-pool-api = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
 sc-consensus-aura = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.11' }
@@ -55,6 +56,7 @@ frame-benchmarking-cli = { git = 'https://github.com/paritytech/substrate', bran
 
 # Local dependencies
 dkg-gadget = { path = "../../dkg-gadget", default-features = false }
+dkg-runtime-primitives = { path = "../../dkg-runtime-primitives", default-features = false }
 
 dkg-standalone-runtime = { version = "3.0.0", path = "../runtime" }
 
@@ -63,6 +65,7 @@ substrate-build-script-utils = { git = 'https://github.com/paritytech/substrate'
 
 [features]
 default = []
+ocw = []
 runtime-benchmarks = [
 	"dkg-standalone-runtime/runtime-benchmarks",
 ]

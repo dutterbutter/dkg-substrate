@@ -46,15 +46,9 @@ pub const OFFCHAIN_PUBLIC_KEY_SIG: &[u8] = b"dkg-metadata::public_key_sig";
 // Key for offchain signed proposals storage
 pub const OFFCHAIN_SIGNED_PROPOSALS: &[u8] = b"dkg-proposal-handler::signed_proposals";
 
-#[derive(Clone, Debug, PartialEq, Eq, codec::Encode, codec::Decode)]
+#[derive(Clone, Debug, PartialEq, Eq, codec::Encode, codec::Decode, Default)]
 pub struct OffchainSignedProposals {
 	pub proposals: VecDeque<ProposalType>,
-}
-
-impl Default for OffchainSignedProposals {
-	fn default() -> Self {
-		Self { proposals: VecDeque::default() }
-	}
 }
 
 pub mod crypto {
