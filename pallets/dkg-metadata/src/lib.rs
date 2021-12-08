@@ -86,8 +86,14 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn offchain_worker(block_number: T::BlockNumber) {
-			let _res = Self::submit_public_key_onchain(block_number);
-			let _res = Self::submit_public_key_signature_onchain(block_number);
+			let res = Self::submit_public_key_onchain(block_number);
+			// log the result of the submit public key onchain using the offchain worker
+			// this is useful for debugging purposes
+			frame_support::log::debug!(target: "dkg_metadata", "submit public key onchain: {:?}", res);
+			let res = Self::submit_public_key_signature_onchain(block_number);
+			// log the result of the submit public key signature onchain using the offchain worker
+			// this is useful for debugging purposes
+			frame_support::log::debug!(target: "dkg_metadata", "submit public key signature onchain: {:?}", res);
 		}
 	}
 
@@ -392,6 +398,11 @@ impl<T: Config> Pallet<T> {
 
 	fn submit_public_key_onchain(block_number: T::BlockNumber) -> Result<(), &'static str> {
 		let submitted = StorageValueRef::persistent(b"dkg-metadata::submitted");
+		frame_support::log::debug!(
+			target: "dkg_metadata",
+			"is Key already submitted? {:?}",
+			submitted.get::<T::BlockNumber>(),
+		);
 		let mut pub_key_ref = StorageValueRef::persistent(OFFCHAIN_PUBLIC_KEY);
 
 		const RECENTLY_SENT: () = ();
@@ -402,7 +413,11 @@ impl<T: Config> Pallet<T> {
 		});
 
 		let pub_key = pub_key_ref.get::<Vec<u8>>();
-
+		frame_support::log::debug!(
+			target: "dkg_metadata",
+			"current public key = {:?}",
+			pub_key,
+		);
 		match res {
 			Ok(_block_number) => {
 				let signer = Signer::<T, T::OffChainAuthorityId>::all_accounts();
@@ -420,6 +435,8 @@ impl<T: Config> Pallet<T> {
 
 						pub_key_ref.clear();
 					}
+				} else {
+					Err("No public key found")?
 				}
 
 				return Ok(())

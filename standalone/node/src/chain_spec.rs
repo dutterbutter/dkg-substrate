@@ -39,8 +39,8 @@ pub fn authority_keys_from_seed(
 	c: &str,
 ) -> (AccountId, AccountId, AuraId, GrandpaId, DKGId) {
 	(
-		get_account_id_from_seed::<sr25519::Public>(s),
-		get_account_id_from_seed::<sr25519::Public>(c),
+		get_account_id_from_seed::<ecdsa::Public>(s),
+		get_account_id_from_seed::<ecdsa::Public>(c),
 		get_from_seed::<AuraId>(s),
 		get_from_seed::<GrandpaId>(s),
 		get_from_seed::<DKGId>(s),
