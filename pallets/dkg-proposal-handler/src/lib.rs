@@ -269,20 +269,27 @@ impl<T: Config> Pallet<T> {
 		match Self::get_next_offchain_signed_proposal() {
 			Ok(next_proposal) => {
 				// send unsigned transaction to the chain
-				let result = signer
-					.send_signed_transaction(|_acct| Call::<T>::submit_signed_proposal {
-						prop: next_proposal.clone(),
-					})
-					.iter()
-					.map(|r| r.1)
-					.collect::<Result<Vec<_>, _>>()
-					.map_err(|_| "Failed to submit signed transaction from ocw");
-				// log the result of the transaction submission
-				frame_support::log::debug!(
-					target: "dkg_proposal_handler",
-					"Submitted transaction for signed proposal: {:?}",
-					result
-				);
+				let result = signer.send_signed_transaction(|_acct| {
+					Call::<T>::submit_signed_proposal { prop: next_proposal.clone() }
+				});
+				// Display error if the signed tx fails.
+				if let Some((acc, res)) = result {
+					if res.is_err() {
+						frame_support::log::error!(
+							target: "dkg_proposal_handler",
+							"failure: offchain_signed_tx: tx sent: {:?} by account: {:?}",
+							acc.id,
+							acc.public,
+						);
+					} else {
+						// log the result of the transaction submission
+						frame_support::log::debug!(
+							target: "dkg_proposal_handler",
+							"Submitted transaction for signed proposal: {:?}",
+							res
+						);
+					}
+				}
 			},
 			Err(e) => {
 				// log the error
