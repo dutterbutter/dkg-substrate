@@ -2047,6 +2047,7 @@ dependencies = [
  "dkg-standalone-runtime",
  "frame-benchmarking",
  "frame-benchmarking-cli",
+ "hex-literal",
  "jsonrpc-core",
  "pallet-transaction-payment-rpc",
  "rand 0.7.3",

@@ -85,7 +85,7 @@ pub mod pallet {
 		type AdminOrigin: EnsureOrigin<Self::Origin>;
 
 		/// Proposed transaction blob proposal
-		type Proposal: Parameter + EncodeLike + EncodeAppend;
+		type Proposal: Parameter + EncodeLike + EncodeAppend + MaybeSerializeDeserialize;
 
 		/// ChainID for anchor edges
 		type ChainId: Encode
@@ -174,12 +174,19 @@ pub mod pallet {
 	pub struct GenesisConfig<T: Config> {
 		pub initial_chain_ids: Vec<T::ChainId>,
 		pub initial_r_ids: Vec<(ResourceId, Vec<u8>)>,
+		pub initial_proposals: Vec<(T::AccountId, ProposalNonce, T::ChainId, T::Proposal)>,
+		pub initial_proposers: Vec<T::AccountId>,
 	}
 
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
-			Self { initial_chain_ids: Default::default(), initial_r_ids: Default::default() }
+			Self {
+				initial_chain_ids: Default::default(),
+				initial_r_ids: Default::default(),
+				initial_proposals: Default::default(),
+				initial_proposers: Default::default(),
+			}
 		}
 	}
 
@@ -191,6 +198,14 @@ pub mod pallet {
 			}
 			for (r_id, r_data) in self.initial_r_ids.iter() {
 				Resources::<T>::insert(r_id, r_data.clone());
+			}
+
+			for proposer in self.initial_proposers.iter() {
+				Proposers::<T>::insert(proposer, true);
+			}
+
+			for (who, nonce, src_id, prop) in self.initial_proposals.iter().cloned() {
+				let _ = Pallet::<T>::vote_for(who, nonce, src_id, prop);
 			}
 		}
 	}

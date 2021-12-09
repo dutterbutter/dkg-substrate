@@ -6,7 +6,7 @@ use dkg_standalone_runtime::{
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{ecdsa, sr25519, Pair, Public};
+use sp_core::{bytes, ecdsa, sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
@@ -18,9 +18,9 @@ pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
-	TPublic::Pair::from_string(&format!("//{}", seed), None)
-		.expect("static values are valid; qed")
-		.public()
+	let pair = TPublic::Pair::from_string(&format!("//{}", seed), None)
+		.expect("static values are valid; qed");
+	pair.public()
 }
 
 type AccountPublic = <Signature as Verify>::Signer;
@@ -125,12 +125,16 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				],
 				vec![],
 				// Sudo account
-				get_account_id_from_seed::<ecdsa::Public>("Alice"),
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
 				vec![
 					get_account_id_from_seed::<ecdsa::Public>("Alice"),
 					get_account_id_from_seed::<ecdsa::Public>("Bob"),
 					get_account_id_from_seed::<ecdsa::Public>("Charlie"),
+					// as sr25519::Public
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
 					get_account_id_from_seed::<sr25519::Public>("Dave"),
 					get_account_id_from_seed::<sr25519::Public>("Eve"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
@@ -140,13 +144,6 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-					// As ecdsa public
-					get_account_id_from_seed::<ecdsa::Public>("Alice"),
-					get_account_id_from_seed::<ecdsa::Public>("Bob"),
-					get_account_id_from_seed::<ecdsa::Public>("Charlie"),
-					get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
-					get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
-					get_account_id_from_seed::<ecdsa::Public>("Charlie//stash"),
 				],
 				true,
 			)
@@ -242,6 +239,22 @@ fn testnet_genesis(
 				],
 				Default::default(),
 			)],
+			initial_proposers: vec![
+				// charlie
+				get_account_id_from_seed::<sr25519::Public>("Charlie"),
+			],
+			initial_proposals: vec![
+				(
+					// Who
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					// Nonce
+					0,
+					// Chain ID
+					4,
+					// proposal
+					hex_literal::hex!("d10151e6c7a528e187e53e615f6c7de8109f9e1e4ca30000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000017c2c0c23f685eab2dbcb0a774d5309f48b41e99cd353726b983ad64a760c212").to_vec(),
+				)
+			]
 		},
 	}
 }
