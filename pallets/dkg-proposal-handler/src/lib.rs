@@ -42,9 +42,8 @@ pub mod pallet {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		/// ChainID for anchor edges
 		type ChainId: Encode + Decode + Parameter + AtLeast32Bit + Default + Copy;
-
 		/// The identifier type for an offchain worker.
-		type OffChainAuthorityId: AppCrypto<Self::Public, Self::Signature>;
+		type OffChainAuthId: AppCrypto<Self::Public, Self::Signature>;
 	}
 
 	#[pallet::pallet]
@@ -96,7 +95,9 @@ pub mod pallet {
 		/// Proposal signature is invalid
 		ProposalSignatureInvalid,
 		/// No proposal with the ID was found
-		ProposalDoesNotExist,
+		ProposalDoesNotExists,
+		/// Proposal with the ID has already been submitted
+		ProposalAlreadyExists,
 		/// Chain id is invalid
 		ChainIdInvalid,
 	}
@@ -157,7 +158,7 @@ pub mod pallet {
 						chain_id,
 						DKGPayloadKey::EVMProposal(nonce)
 					),
-					Error::<T>::ProposalDoesNotExist
+					Error::<T>::ProposalDoesNotExists
 				);
 				ensure!(
 					Self::validate_proposal_signature(&data, &signature),
@@ -171,6 +172,7 @@ pub mod pallet {
 				);
 
 				UnsignedProposalQueue::<T>::remove(chain_id, DKGPayloadKey::EVMProposal(nonce));
+				Ok(().into())
 			} else if let Ok((chain_id, nonce)) = Self::decode_anchor_update(&data) {
 				// log the chain id and nonce
 				frame_support::log::debug!(
@@ -184,7 +186,7 @@ pub mod pallet {
 						chain_id,
 						DKGPayloadKey::AnchorUpdateProposal(nonce)
 					),
-					Error::<T>::ProposalDoesNotExist
+					Error::<T>::ProposalDoesNotExists
 				);
 				// log that proposal exist in the unsigned queue
 				frame_support::log::debug!(
@@ -207,14 +209,14 @@ pub mod pallet {
 					DKGPayloadKey::AnchorUpdateProposal(nonce),
 					prop.clone(),
 				);
-
 				UnsignedProposalQueue::<T>::remove(
 					chain_id,
 					DKGPayloadKey::AnchorUpdateProposal(nonce),
 				);
+				Ok(().into())
+			} else {
+				Err(Error::<T>::ProposalFormatInvalid)?
 			}
-
-			Ok(().into())
 		}
 	}
 }
@@ -259,7 +261,7 @@ impl<T: Config> Pallet<T> {
 	// *** Offchain worker methods ***
 
 	fn submit_signed_proposal_onchain(_block_number: T::BlockNumber) -> Result<(), &'static str> {
-		let signer = Signer::<T, T::OffChainAuthorityId>::any_account();
+		let signer = Signer::<T, T::OffChainAuthId>::all_accounts();
 		if !signer.can_sign() {
 			return Err(
 				"No local accounts available. Consider adding one via `author_insertKey` RPC.",
@@ -273,7 +275,7 @@ impl<T: Config> Pallet<T> {
 					Call::<T>::submit_signed_proposal { prop: next_proposal.clone() }
 				});
 				// Display error if the signed tx fails.
-				if let Some((acc, res)) = result {
+				for (acc, res) in result {
 					if res.is_err() {
 						frame_support::log::error!(
 							target: "dkg_proposal_handler",

@@ -29,6 +29,7 @@ impl<ID, K> fmt::Display for DKGMessage<ID, K> {
 			DKGMsgPayload::Keygen(_) => "Keygen",
 			DKGMsgPayload::Offline(_) => "Offline",
 			DKGMsgPayload::Vote(_) => "Vote",
+			DKGMsgPayload::PublicKeyBroadcast(_) => "PublicKeyBroadcast",
 		};
 		write!(f, "DKGMessage of type {}", label)
 	}
@@ -40,6 +41,7 @@ pub enum DKGMsgPayload<Key> {
 	Keygen(DKGKeygenMessage),
 	Offline(DKGOfflineMessage),
 	Vote(DKGVoteMessage<Key>),
+	PublicKeyBroadcast(DKGPublicKeyMessage),
 }
 
 #[derive(Debug, Clone, Decode, Encode)]
@@ -79,6 +81,15 @@ pub struct DKGSignedPayload<Key> {
 	/// The payload signatures are collected for.
 	pub payload: Vec<u8>,
 	/// Runtime compatible signature for the payload
+	pub signature: Vec<u8>,
+}
+
+
+#[derive(Debug, Clone, Decode, Encode)]
+#[cfg_attr(feature = "scale-info", derive(scale_info::TypeInfo))]
+pub struct DKGPublicKeyMessage {
+	pub pub_key: Vec<u8>,
+	/// Authority's signature for this public key
 	pub signature: Vec<u8>,
 }
 
