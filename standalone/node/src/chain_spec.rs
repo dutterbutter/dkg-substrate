@@ -39,7 +39,7 @@ pub fn authority_keys_from_seed(
 	c: &str,
 ) -> (AccountId, AccountId, AuraId, GrandpaId, DKGId) {
 	(
-		get_account_id_from_seed::<ecdsa::Public>(s),
+		get_account_id_from_seed::<sr25519::Public>(s),
 		get_account_id_from_seed::<sr25519::Public>(c),
 		get_from_seed::<AuraId>(s),
 		get_from_seed::<GrandpaId>(s),
@@ -79,12 +79,12 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				],
 				vec![],
 				// Sudo account
-				get_account_id_from_seed::<ecdsa::Public>("Alice"),
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
 				vec![
-					get_account_id_from_seed::<ecdsa::Public>("Alice"),
-					get_account_id_from_seed::<ecdsa::Public>("Bob"),
-					get_account_id_from_seed::<ecdsa::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
@@ -128,10 +128,6 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
 				vec![
-					get_account_id_from_seed::<ecdsa::Public>("Alice"),
-					get_account_id_from_seed::<ecdsa::Public>("Bob"),
-					get_account_id_from_seed::<ecdsa::Public>("Charlie"),
-					// as sr25519::Public
 					get_account_id_from_seed::<sr25519::Public>("Alice"),
 					get_account_id_from_seed::<sr25519::Public>("Bob"),
 					get_account_id_from_seed::<sr25519::Public>("Charlie"),
@@ -228,7 +224,6 @@ fn testnet_genesis(
 			// Assign network admin rights.
 			key: root_key,
 		},
-		dkg: DKGConfig::default(),
 		dkg_proposals: DKGProposalsConfig {
 			initial_chain_ids: vec![3, 4],
 			initial_r_ids: vec![(
@@ -254,7 +249,13 @@ fn testnet_genesis(
 					// proposal
 					hex_literal::hex!("d10151e6c7a528e187e53e615f6c7de8109f9e1e4ca30000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000017c2c0c23f685eab2dbcb0a774d5309f48b41e99cd353726b983ad64a760c212").to_vec(),
 				)
-			]
+			],
+		
+	},
+	dkg: DKGConfig {
+			authorities: initial_authorities.iter().map(|(.., x)| x.clone()).collect::<_>(),
+			threshold: Default::default(),
+			authority_ids: initial_authorities.iter().map(|(x, ..)| x.clone()).collect::<_>(),
 		},
-	}
+}
 }

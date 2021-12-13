@@ -19,10 +19,10 @@ use std::{collections::BTreeMap, time::Duration};
 use dkg_primitives::DKGPayloadKey;
 use sc_network::PeerId;
 use sc_network_gossip::{ValidationResult, Validator, ValidatorContext};
-use sp_runtime::traits::{Block, Header, NumberFor};
+use sp_runtime::traits::{Block, NumberFor};
 
 use codec::Decode;
-use log::{debug, warn};
+use log::{debug, trace, warn};
 use parking_lot::{Mutex, RwLock};
 use wasm_timer::Instant;
 
@@ -131,8 +131,7 @@ where
 		data: &[u8],
 	) -> ValidationResult<B::Hash> {
 		let mut data_copy = data;
-
-		debug!(target: "dkg", "🕸️  decoding message as DKGMessage::<Public, DKGPayloadKey>");
+		trace!(target: "dkg", "🕸️  Got a message: {:?}, from: {:?}", data_copy, sender);
 		match DKGMessage::<Public, DKGPayloadKey>::decode(&mut data_copy) {
 			Ok(msg) => {
 				debug!(target: "dkg", "🕸️  Got dkg message with round_id: {}, from: {:?}", msg.round_id, sender);
