@@ -513,6 +513,16 @@ impl pallet_dkg_metadata::Config for Runtime {
 	type ProposalHandler = DKGProposalHandler;
 }
 
+#[cfg(feature="dkg-session-time")]
+parameter_types! {
+	pub const ChainIdentifier: u32 = 5;
+	pub const ProposalLifetime: BlockNumber = HOURS / 5;
+	pub const DKGAccountId: PalletId = PalletId(*b"dw/dkgac");
+	pub const RefreshDelay: Permill = Permill::from_percent(50);
+	pub const TimeToRestart: BlockNumber = 20;
+}
+
+#[cfg(not(feature="dkg-session-time"))]
 parameter_types! {
 	pub const ChainIdentifier: u32 = 5;
 	pub const ProposalLifetime: BlockNumber = HOURS / 5;

@@ -121,4 +121,4 @@ runtime-benchmarks = [
 	"pallet-dkg-proposals/runtime-benchmarks",
 	"pallet-dkg-metadata/runtime-benchmarks"
 ]
-
+dkg-session-time = []

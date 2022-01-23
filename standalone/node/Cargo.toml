@@ -71,3 +71,4 @@ default = []
 runtime-benchmarks = [
 	"dkg-standalone-runtime/runtime-benchmarks",
 ]
+dkg-session-time = []

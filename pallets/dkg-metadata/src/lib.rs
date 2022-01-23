@@ -53,7 +53,7 @@ pub use pallet::*;
 pub mod pallet {
 	use super::*;
 	use dkg_runtime_primitives::ProposalHandlerTrait;
-use frame_support::{ensure, pallet_prelude::*, transactional};
+	use frame_support::{ensure, pallet_prelude::*, transactional};
 	use frame_system::{
 		ensure_signed,
 		offchain::{AppCrypto, CreateSignedTransaction},
