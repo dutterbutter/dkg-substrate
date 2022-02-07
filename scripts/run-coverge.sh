@@ -12,7 +12,7 @@ eval "$ENV_FLAGS cargo build"
 eval "$ENV_FLAGS cargo test"
 
 # Generate code coverage artefacts.
-grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+grcov . -s . --binary-path ./target/debug/ --ignore "target/debug/build/*"  -t html --branch --ignore-not-existing -o ./target/debug/coverage/
 
 # Open code coverage report in browser.
 open target/debug/coverage/index.html
