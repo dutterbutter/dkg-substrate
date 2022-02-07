@@ -290,8 +290,6 @@ To get code coverage, you need grcov and llvm-tools-preview:
 
 ```sh
 cargo install grcov
-
-rustup component add llvm-tools-preview
 ```
 
 You can run `sh script/run-coverage.sh` to generate code coverage or you can follow the instructions below to understand how that script works, which is also important if you only want to generate coverage for a specific package.
