@@ -31,7 +31,6 @@ jobs:
       with:
         profile: minimal
         toolchain: nightly
-
     # Enable this for clippy linting.
     # - name: Check and Lint Code
     #   run: cargo +nightly-2020-05-07 clippy -- -D warnings
@@ -40,24 +39,8 @@ jobs:
       run: cargo check
 
     - name: Check Format
-      run: cargo fmt --all -- --check
-
-    - name: Build project
-      env:
-        RUSTC_BOOTSTRAP: '1'
-        CARGO_INCREMENTAL: '0'
-        RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort'
-      run: cargo build -p dkg-standalone-node
+      run: |
+        cargo fmt --all -- --check
 
     - name: Test Code
-      env:
-        RUSTC_BOOTSTRAP: '1'
-        CARGO_INCREMENTAL: '0'
-        RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort'
-      run: cargo test -p dkg-standalone-node
-
-    - name: Install Grcov
-      run: cargo install grcov
-
-    - name: Generate Coverage
-      run: grcov . -s . --binary-path ./target/debug/ --ignore "target/debug/build/*"  -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+      run: cargo test
