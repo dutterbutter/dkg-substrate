@@ -37,7 +37,6 @@ jobs:
     - name: Set up dkg node
       run: |
         sh ./scripts/run-standalone.sh
-
     - name: Run anchor tests
       run: |
 # Time out is in place to allow keygen to complete; unfortunatley non-deterministic    
