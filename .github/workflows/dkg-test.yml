@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-code:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Add wasm toolchain
@@ -21,14 +21,6 @@ jobs:
         override: true
     - name: Checkout master
       uses: actions/checkout@v2
-    - name: Cache cargo registry
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Build
       run: cargo build --release
