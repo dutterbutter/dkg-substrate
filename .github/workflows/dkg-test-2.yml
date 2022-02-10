@@ -23,11 +23,7 @@ jobs:
 
     - name: Build
       run: cargo build --release
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1
-      with:
-        name: ubuntu-18.04-dkg-standalone-node
-        path: target/release/dkg-standalone-node
+      
     - name: Set up dkg node
       run: | 
         sh ./scripts/run-standalone.sh
