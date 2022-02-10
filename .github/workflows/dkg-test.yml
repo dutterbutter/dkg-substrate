@@ -35,11 +35,11 @@ jobs:
     #   run: cargo +nightly-2020-05-07 clippy -- -D warnings
 
     - name: Set up dkg node
-      run: |
+      run: | 
         sh ./scripts/run-standalone.sh
+      # Time out is in place to allow keygen to complete; unfortunatley non-deterministic    
     - name: Run anchor tests
       run: |
-# Time out is in place to allow keygen to complete; unfortunatley non-deterministic    
         timeout-minutes 1
         cd ./dkg-test-suite
         yarn anchor-proposals
