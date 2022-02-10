@@ -13,12 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Add wasm toolchain
+    - name: Add toolchain
       uses: actions-rs/toolchain@v1
       with:
+        profile: minimal
         toolchain: nightly
-        target: wasm32-unknown-unknown
-        override: true
     - name: Checkout master
       uses: actions/checkout@v2
 
