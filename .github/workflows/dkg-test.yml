@@ -13,9 +13,14 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: Checkout Code
+    - name: Add wasm toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        target: wasm32-unknown-unknown
+        override: true
+    - name: Checkout master
       uses: actions/checkout@v2
-
     - name: Cache cargo registry
       uses: actions/cache@v2
       with:
@@ -25,15 +30,13 @@ jobs:
           target
         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Install toolchain
-      uses: actions-rs/toolchain@v1
+    - name: Build
+      run: cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
       with:
-        profile: minimal
-        toolchain: nightly
-    # Enable this for clippy linting.
-    # - name: Check and Lint Code
-    #   run: cargo +nightly-2020-05-07 clippy -- -D warnings
-
+        name: ubuntu-18.04-substrate
+        path: target/release/substrate
     - name: Set up dkg node
       run: | 
         sh ./scripts/run-standalone.sh
