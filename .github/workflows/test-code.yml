@@ -28,35 +28,10 @@ jobs:
             task: "cargo fmt --all -- --check"
           - name: Test Code
             task: "cargo nextest run"
-        include:
-        # Add another key that has sccache-path for ubuntu
-          - os: ubuntu-latest
-            sccache-path: /home/runner/.cache/sccache
 
-    env:
-      # Show stack trace when tests panic
-      RUST_BACKTRACE: full
-      RUSTC_WRAPPER: sccache
-      RUSTV: ${{ matrix.rust }}
-      SCCACHE_CACHE_SIZE: 2G
-      SCCACHE_DIR: ${{ matrix.sccache-path }}
-      # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment it back out
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2
-    # Install sccache for improved build and test speed
-    # sccache reduces the number of times we need to re-build crates when possible
-    # Note: This only install for ubuntu, if intended to use with macos need include conditional check and then proceed to install using Homebrew
-    - name: Install sccache (ubuntu-latest)
-      env:
-        LINK: https://github.com/mozilla/sccache/releases/download
-        SCCACHE_VERSION: 0.2.15
-      run: |
-        SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
-        mkdir -p $HOME/.local/bin
-        curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
-        mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install cargo-nextest
       uses: baptiste0928/cargo-install@v1
@@ -69,6 +44,7 @@ jobs:
       with:
         profile: minimal
         toolchain: ${{ matrix.rust }}
+        
     # Preserve directories between job runs
     - name: Cache cargo registry
       uses: actions/cache@v2
@@ -81,21 +57,6 @@ jobs:
         restore-keys: |
             ${{ runner.os }}-cargo-
 
-    - name: Save sccache
-      uses: actions/cache@v2
-      continue-on-error: false
-      with:
-        path: ${{ matrix.sccache-path }}
-        key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-sccache-
-    # start the sccache server
-    - name: Start sccache server
-      run: sccache --start-server
     # Runs actual checks, fmt, and tests  
     - name: ${{ matrix.make.name }}
       run: make ${{ matrix.make.task }}
-    - name: Print sccache stats
-      run: sccache --show-stats
-    - name: Stop sccache server
-      run: sccache --stop-server || true
