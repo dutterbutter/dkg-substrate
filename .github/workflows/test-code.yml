@@ -87,7 +87,9 @@ jobs:
           ${{ runner.os }}-sccache-
     # start the sccache server
     - name: Start sccache server
-      run: sccache --start-server
+      run: |
+          echo sccache --version
+          sccache --start-server
     # Runs actual checks, fmt, and tests  
     - name: ${{ matrix.make.name }}
       run: cargo ${{ matrix.make.task }}
