@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   pull_request:
@@ -50,7 +50,7 @@ jobs:
       run: |
           SCCACHE_FILE=sccache-v0.2.15-x86_64-unknown-linux-musl
           mkdir -p $HOME/.local/bin
-          curl -L "https://github.com/mozilla/sccache/releases/download/sccache-dist-v0.2.15-x86_64-unknown-linux-musl.tar.gz"
+          curl -L -o $SCCACHE_FILE "https://github.com/mozilla/sccache/releases/download/sccache-dist-v0.2.15-x86_64-unknown-linux-musl.tar.gz"
           mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
