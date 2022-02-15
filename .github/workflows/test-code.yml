@@ -50,7 +50,8 @@ jobs:
       run: |
           SCCACHE_FILE=sccache-v0.2.15-x86_64-unknown-linux-musl
           mkdir -p $HOME/.local/bin
-          curl -L "https://github.com/mozilla/sccache/releases/download/sccache-dist-v0.2.15-x86_64-unknown-linux-musl.tar.gz" -o  $HOME/.local/bin/sccache
+          curl -L "https://github.com/mozilla/sccache/releases/download/sccache-dist-v0.2.15-x86_64-unknown-linux-musl.tar.gz" -o $HOME/.local/bin/sccache
+          sudo chmod +x $HOME/.local/bin/sccache
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install cargo-nextest
@@ -86,7 +87,7 @@ jobs:
           ${{ runner.os }}-sccache-
     # start the sccache server
     - name: Start sccache server
-      run: sudo chmod +x sccache --start-server
+      run: sccache --start-server
     # Runs actual checks, fmt, and tests  
     - name: ${{ matrix.make.name }}
       run: cargo ${{ matrix.make.task }}
