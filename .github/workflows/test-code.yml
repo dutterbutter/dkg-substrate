@@ -48,11 +48,11 @@ jobs:
     # Note: This only install for ubuntu, if intended to use with macos need include conditional check and then proceed to install using Homebrew
     - name: Install sccache (ubuntu-latest)
       run: |
-        curl -L "https://github.com/mozilla/sccache/releases/download/sccache-dist-v0.2.15-x86_64-unknown-linux-musl.tar.gz"
-      # SCCACHE_FILE=sccache-dist-v0.2.15-x86_64-unknown-linux-musl
-      # mkdir -p $HOME/.local/bin
-      # mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
-      # echo "$HOME/.local/bin" >> $GITHUB_PATH
+          SCCACHE_FILE=sccache-v0.2.15-x86_64-unknown-linux-musl
+          mkdir -p $HOME/.local/bin
+          curl -L "https://github.com/mozilla/sccache/releases/download/sccache-dist-v0.2.15-x86_64-unknown-linux-musl.tar.gz"
+          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install cargo-nextest
       uses: baptiste0928/cargo-install@v1
