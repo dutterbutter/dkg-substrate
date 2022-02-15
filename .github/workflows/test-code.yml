@@ -45,16 +45,18 @@ jobs:
         profile: minimal
         toolchain: ${{ matrix.rust }}
     # Preserve directories between job runs
-    - name: Cache cargo registry
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-            ${{ runner.os }}-cargo-
+    # - name: Cache cargo registry
+    #   uses: actions/cache@v2
+    #   with:
+    #     path: |
+    #       ~/.cargo/registry
+    #       ~/.cargo/git
+    #       target
+    #     key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+    #     restore-keys: |
+    #         ${{ runner.os }}-cargo-
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v1.3.0
 
     # Runs actual checks, fmt, and tests  
     - name: ${{ matrix.make.name }}
