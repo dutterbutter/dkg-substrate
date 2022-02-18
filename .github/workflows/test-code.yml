@@ -26,18 +26,18 @@ jobs:
             task: "check"
           - name: Check Format
             task: "fmt --all -- --check"
-          - name: Test Code
-            task: "nextest run"
+          # - name: Test Code
+          #   task: "nextest run"
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2
 
-    - name: Install cargo-nextest
-      uses: baptiste0928/cargo-install@v1
-      with:
-        crate: cargo-nextest
-        version: latest
+    # - name: Install cargo-nextest
+    #   uses: baptiste0928/cargo-install@v1
+    #   with:
+    #     crate: cargo-nextest
+    #     version: latest
 
     - name: Install toolchain
       uses: actions-rs/toolchain@v1

@@ -18,6 +18,12 @@ jobs:
         with:
           submodules: "recursive"
 
+      - name: Install cargo-nextest
+        uses: baptiste0928/cargo-install@v1
+        with:
+          crate: cargo-nextest
+          version: latest
+
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:
@@ -32,6 +38,9 @@ jobs:
         with:
           profile: minimal
           toolchain: nightly
+        
+      - name: Test Code
+        run: cargo nextest run
 
       - name: Build Standalone Node for Integration Tests (Release)
         run: cargo build --release -p dkg-standalone-node --features integration-tests
