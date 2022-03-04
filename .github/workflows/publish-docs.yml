@@ -1,4 +1,4 @@
-name: Rust CI
+name: Publish Docs
 
 on:
   push:
@@ -36,4 +36,4 @@ jobs:
           echo '<meta http-equiv="refresh" content="0; url=https://dutterbutter.github.io/dkg-substrate/dkg-primitives/index.html">' > index.html
           git add .
           git -c user.name='ci' -c user.email='ci' commit -m 'Deploy documentation'
-          git push -f -q https://git:${{ secrets.github_token }}@github.com/${{ github.repository }} HEAD:gh-pagesst:
+          git push -f -q https://git:${{ secrets.github_token }}@github.com/${{ github.repository }} HEAD:gh-pages
