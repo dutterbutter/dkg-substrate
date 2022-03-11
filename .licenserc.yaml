@@ -16,5 +16,11 @@ header:
     - '**/*.json'
     - '**/*.lock'
     - '**/*.toml'
+    - '**/*.yaml'
+    - '.husky/*'
+    - 'dkg-test-suite/protocol-solidity-fixtures/*'
+    - '.nvmrc'
+    - 'jest.config.js'
+    - '**/*.sh'
     
   comment: on-failure
