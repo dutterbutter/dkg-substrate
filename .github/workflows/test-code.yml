@@ -63,9 +63,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: nightly
-          components: miri
+      - name: Install Miri
+        run: |
+          rustup toolchain install nightly --component miri
+          rustup override set nightly
+          cargo miri setup
+    
+      - name: Run mira tests
       - run: cargo miri test --verbose --no-default-features
       - run: cargo miri test --verbose --all-features
