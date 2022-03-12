@@ -1,0 +1,34 @@
+name: Reusable rust setup
+
+on:
+  workflow_call:
+
+jobs:
+  rust-setup:
+    name: Pass input and secrets to my-action
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+      # Only running tests and checks for ubuntu right now
+        os: [ubuntu-latest, macos-latest]
+        # Only using nightly toolchain
+        rust: [stable, beta, nightly]
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust }}
+
+    - name: Cache cargo registry
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}

@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
       # Only running tests and checks for ubuntu right now
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         # Only using nightly toolchain
-        rust: [nightly]
+        rust: [stable, beta, nightly]
         # Setup to execute cargo check, fmt, and make use of nextest run for unit tests
         make:
           - name: Check code
@@ -27,7 +27,7 @@ jobs:
           - name: Check Format
             task: "fmt --all -- --check"
           - name: Test Code
-            task: "nextest run"
+            task: "nextest run --verbose --workspace --all-features"
 
     steps:
     - name: Checkout Code
@@ -57,3 +57,15 @@ jobs:
     # Runs actual checks, fmt, and tests  
     - name: ${{ matrix.make.name }}
       run: cargo ${{ matrix.make.task }}
+
+  miri-test:
+    name: Test with miri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: nightly
+          components: miri
+      - run: cargo miri test --verbose --no-default-features
+      - run: cargo miri test --verbose --all-features
