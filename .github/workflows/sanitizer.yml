@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         sanitizer: [address, memory, thread, leak]
+        rust: [stable, beta, nightly]
     steps:
       - uses: actions/checkout@v2
       - uses: hecrj/setup-rust-action@v1
@@ -27,6 +28,12 @@ jobs:
         with:
           crate: cargo-nextest
           version: latest
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
 
       - name: Test with sanitizer
         env:
@@ -87,4 +94,8 @@ jobs:
       # Important: This doesn't work for multi-crate workspaces, which
       # will require you call `cargo rustdoc -p` for each package! (See below)
       # (Also, note that this is `cargo rustdoc` and not `cargo doc`)
-      - run: cargo rustdoc --all-features -- -D warnings
+      - run: cargo rustdoc -p pallet-dkg-metadata --all-features -- -D warnings
+      - run: cargo rustdoc -p pallet-dkg-proposals --all-features -- -D warnings
+      - run: cargo rustdoc -p pallet-dkg-proposal-handler --all-features -- -D warnings
+      - run: cargo rustdoc -p dkg-primitives --all-features -- -D warnings
+      - run: cargo rustdoc -p dkg-runtime-primitives --all-features -- -D warnings
