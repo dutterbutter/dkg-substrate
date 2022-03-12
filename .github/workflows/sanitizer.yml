@@ -15,12 +15,13 @@ jobs:
       fail-fast: false
       matrix:
         sanitizer: [address, memory, thread, leak]
-        rust: [stable, beta, nightly]
     steps:
       - uses: actions/checkout@v2
-      - uses: hecrj/setup-rust-action@v1
+      
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: nightly
+          toolchain: nightly-2021-11-20-x86_64-unknown-linux-gnu
           components: rust-src
 
       - name: Install cargo-nextest
@@ -29,11 +30,6 @@ jobs:
           crate: cargo-nextest
           version: latest
 
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
 
       - name: Test with sanitizer
         env:
