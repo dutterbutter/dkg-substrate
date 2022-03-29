@@ -10,14 +10,12 @@ on:
 
 jobs:
   test-code:
-    name: ${{ matrix.make.name }} (${{ matrix.os }})
+    name: ${{ matrix.make.name }}
     # Set up matrix for future os test checks
-    runs-on: ${{ matrix.os }}
+    runs-on: buildjet-16vcpu-ubuntu-2004
     strategy:
       fail-fast: false
       matrix:
-      # Only running tests and checks for ubuntu right now
-        os: [ubuntu-latest]
         # Only using nightly toolchain
         rust: [nightly]
         # Setup to execute cargo check, fmt, and make use of nextest run for unit tests
