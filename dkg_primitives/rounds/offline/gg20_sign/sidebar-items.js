@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""],["InternalError",""],["ProceedError",""],["SignError",""]],"mod":[["rounds",""]],"struct":[["CompletedOfflineStage",""],["OfflineProtocolMessage",""],["OfflineStage","Offline Stage of GG20 signing"],["PartialSignature",""],["SignManual","Manual GG20 signing"]]});

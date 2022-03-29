@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["dkg_standalone_runtime"] = [{"text":"impl&lt;T:&nbsp;Config&gt; ElectionProvider for <a class=\"struct\" href=\"dkg_standalone_runtime/struct.Fallback.html\" title=\"struct dkg_standalone_runtime::Fallback\">Fallback</a>&lt;T&gt;","synthetic":false,"types":["dkg_standalone_runtime::Fallback"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

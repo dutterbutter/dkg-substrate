@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["dkg_node"] = [{"text":"impl NativeExecutionDispatch for <a class=\"struct\" href=\"dkg_node/service/struct.RuntimeExecutor.html\" title=\"struct dkg_node::service::RuntimeExecutor\">RuntimeExecutor</a>","synthetic":false,"types":["dkg_node::service::RuntimeExecutor"]}];
+implementors["dkg_standalone_node"] = [{"text":"impl NativeExecutionDispatch for <a class=\"struct\" href=\"dkg_standalone_node/service/struct.RuntimeExecutor.html\" title=\"struct dkg_standalone_node::service::RuntimeExecutor\">RuntimeExecutor</a>","synthetic":false,"types":["dkg_standalone_node::service::RuntimeExecutor"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["dkg_runtime"] = [{"text":"impl WeightToFeePolynomial for <a class=\"struct\" href=\"dkg_runtime/struct.WeightToFee.html\" title=\"struct dkg_runtime::WeightToFee\">WeightToFee</a>","synthetic":false,"types":["dkg_runtime::WeightToFee"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

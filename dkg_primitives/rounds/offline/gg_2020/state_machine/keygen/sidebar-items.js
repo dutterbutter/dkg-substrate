@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Error type of keygen protocol"],["ProceedError","Proceeding protocol error"]],"struct":[["Keygen","Keygen protocol state machine"],["LocalKey","Local secret obtained by party after keygen protocol is completed"],["ProtocolMessage","Protocol message which parties send on wire"]]});

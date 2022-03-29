@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["generate_h1_h2_N_tilde",""],["verify",""]],"struct":[["KeyGenBroadcastMessage1",""],["KeyGenDecommitMessage1",""],["Keys",""],["LocalSignature",""],["Parameters",""],["PartyPrivate",""],["SharedKeys",""],["SignBroadcastPhase1",""],["SignDecommitPhase1",""],["SignKeys",""],["SignatureRecid",""]]});

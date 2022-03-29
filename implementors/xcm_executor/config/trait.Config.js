@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["dkg_runtime"] = [{"text":"impl Config for <a class=\"struct\" href=\"dkg_runtime/xcm_config/struct.XcmConfig.html\" title=\"struct dkg_runtime::xcm_config::XcmConfig\">XcmConfig</a>","synthetic":false,"types":["dkg_runtime::xcm_config::XcmConfig"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

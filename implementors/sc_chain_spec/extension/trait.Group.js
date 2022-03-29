@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["dkg_node"] = [{"text":"impl Group for <a class=\"struct\" href=\"dkg_node/chain_spec/struct.Extensions.html\" title=\"struct dkg_node::chain_spec::Extensions\">Extensions</a>","synthetic":false,"types":["dkg_node::chain_spec::Extensions"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

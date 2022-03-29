@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DAYS",""],["EPOCH_DURATION_IN_BLOCKS",""],["EPOCH_DURATION_IN_SLOTS",""],["HOURS",""],["MILLISECS_PER_BLOCK",""],["MINUTES",""],["PRIMARY_PROBABILITY",""],["SECS_PER_BLOCK",""],["SLOT_DURATION",""]],"type":[["BlockNumber","An index to a block."],["Moment","Type used for expressing timestamp."]]});

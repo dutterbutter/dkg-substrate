@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["dkg_runtime"] = [{"text":"impl PalletInfo for <a class=\"struct\" href=\"dkg_runtime/struct.PalletInfo.html\" title=\"struct dkg_runtime::PalletInfo\">PalletInfo</a>","synthetic":false,"types":["dkg_runtime::PalletInfo"]}];
+implementors["dkg_standalone_runtime"] = [{"text":"impl PalletInfo for <a class=\"struct\" href=\"dkg_standalone_runtime/struct.PalletInfo.html\" title=\"struct dkg_standalone_runtime::PalletInfo\">PalletInfo</a>","synthetic":false,"types":["dkg_standalone_runtime::PalletInfo"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

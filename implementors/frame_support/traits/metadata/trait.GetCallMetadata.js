@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["dkg_runtime"] = [{"text":"impl GetCallMetadata for <a class=\"enum\" href=\"dkg_runtime/enum.Call.html\" title=\"enum dkg_runtime::Call\">Call</a>","synthetic":false,"types":["dkg_runtime::Call"]}];
+implementors["dkg_standalone_runtime"] = [{"text":"impl GetCallMetadata for <a class=\"enum\" href=\"dkg_standalone_runtime/enum.Call.html\" title=\"enum dkg_standalone_runtime::Call\">Call</a>","synthetic":false,"types":["dkg_standalone_runtime::Call"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
