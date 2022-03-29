@@ -1,4 +1,4 @@
-name: checks
+name: check
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
 jobs:
 
   link-check:
+    name: links
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -22,7 +23,7 @@ jobs:
           config-file: '.github/workflows/mlc_config.json'
 
   license-check:
-    name: Check for warnings
+    name: license
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -32,7 +33,7 @@ jobs:
           config: .licenserc.yaml
 
   cargo-check:
-    name: Check for warnings
+    name: warnings
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: -Dwarnings
@@ -47,7 +48,7 @@ jobs:
       - run: cargo check --workspace --all-targets --verbose --no-default-features
 
   lint-check:
-    name: Lint
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
@@ -59,7 +60,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nigthly
           target: wasm32-unknown-unknown
           override: true
 

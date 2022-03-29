@@ -1,4 +1,4 @@
-name: CI
+name: run
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 jobs:
 
   coverage:
-    name: Coverage
+    name: coverage
     runs-on: buildjet-16vcpu-ubuntu-2004
     steps:
       - name: Cancel Previous Runs
@@ -47,7 +47,7 @@ jobs:
         uses: codecov/codecov-action@v2
 
   tests:
-    name: Test
+    name: tests
     runs-on: buildjet-16vcpu-ubuntu-2004
     steps:
       - name: Cancel Previous Runs
@@ -84,6 +84,7 @@ jobs:
 
   
   e2e:
+    name: e2e
     runs-on: buildjet-16vcpu-ubuntu-2004
     steps:
       - name: Cancel Previous Runs
