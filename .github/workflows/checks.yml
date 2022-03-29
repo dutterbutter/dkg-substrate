@@ -34,7 +34,7 @@ jobs:
 
   cargo-check:
     name: warnings
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2004
     env:
       RUSTFLAGS: -Dwarnings
     steps:
@@ -62,6 +62,7 @@ jobs:
         with:
             toolchain: nightly
             override: true
+            target: wasm32-unknown-unknown
             components: rustfmt, clippy
 
       - name: Rust Cache
